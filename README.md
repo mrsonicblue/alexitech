@@ -103,4 +103,4 @@ These values are only necessary if you are planning to submit the skill for cert
 Credit Where Credit is Due
 --------------------------
 
-Both [hdurdle] and [jterrace] have done amazing work on their respective Harmony projects to make this application possible. 
+Both @hdurdle and @jterrace have done amazing work on their respective Harmony projects to make this application possible. 
