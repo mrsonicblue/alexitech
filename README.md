@@ -63,6 +63,43 @@ The "database.sql" file contains a script to build the database schema used by t
 Alexa Skill Configuration
 -------------------------
 
+This section lists the necessary configuration values when creating the Alexa Skill. The subsections correlate to the configuration sections on the Skill management screen.
+
+##### Skill Information
+
+- Skill Type: Custom Interaction Model
+- Name: [Your choice]
+- Invoication Name: [Your choice, but I recommend "remote"]
+
+##### Interaction Model 
+
+- Intent Schema: [Contents of the "intent schema.txt" file]
+- Custom Slot Types: [Contents of the "intent custom slot types.txt" file]
+- Sample Utterances: [Contents of the "intent sample utterances" file]
+
+##### Configuration 
+
+- Endpoint: [Base URL]/Do
+- Account Linking: Yes
+- Authorization URL: [Base URL]/Auth
+- Client Id: alexa-skill
+- Authorization Grant Type: Implicit Grant
+- Privacy Policy URL: [Base URL]/Help/Privacy
+
+Copy the "Redirect URL" value to the application's web.config file.
+
+##### SSL Certificate 
+
+Follow the instructions for creating a self-signed certificate, if necessary.
+
+##### Publishing Information 
+
+These values are only necessary if you are planning to submit the skill for certification.
+
+##### Privacy & Compliance 
+
+These values are only necessary if you are planning to submit the skill for certification.
+
 Credit Where Credit is Due
 --------------------------
 
