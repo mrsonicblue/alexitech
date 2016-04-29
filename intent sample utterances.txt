@@ -1,0 +1,33 @@
+PlayIntent play
+PlayIntent to play
+PauseIntent pause
+PauseIntent to pause
+ButtonIntent press {Button}
+ButtonIntent press the {Button}
+ButtonIntent press {Button} button
+ButtonIntent press the {Button} button
+SequenceStartIntent start a button sequence
+SequenceStartIntent start a sequence
+SequenceStartIntent listen
+SequenceStartIntent start listening
+SequenceEndIntent end sequence
+SequenceEndIntent end button sequence
+SequenceEndIntent stop sequence
+SequenceEndIntent stop button sequence
+SequenceEndIntent stop listening
+ActivityIntent start {Activity}
+ActivityIntent start {Activity} activity
+ActivityIntent start the {Activity}
+ActivityIntent start the {Activity} activity
+ActivityIntent switch to {Activity}
+ActivityIntent switch to {Activity} activity
+ActivityIntent switch to the {Activity}
+ActivityIntent switch to the {Activity} activity
+OffIntent power off
+OffIntent power down
+OffIntent turn off
+OffIntent shut off
+OffIntent turn off everything
+OffIntent shut off everything
+OffIntent turn everything off
+OffIntent shut everything off

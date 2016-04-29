@@ -1,0 +1,35 @@
+ACTIVITY
+--------
+TV
+DVD
+game
+
+
+BUTTON
+------
+play
+pause
+stop
+up
+down
+left
+right
+fast forward
+rewind
+skip forward
+skip back
+skip backward
+page up
+page down
+chapter up
+chapter down
+select
+menu
+exit
+guide
+XBox guide
+info
+mute
+back
+volume up
+volume down

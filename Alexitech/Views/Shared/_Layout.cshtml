@@ -1,0 +1,21 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewBag.Title</title>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="@Url.Content("~/Content/normalize.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/skeleton.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/site.css")">
+</head>
+<body>
+    <div class="container">
+        <h1>@ViewBag.Title</h1>
+        @RenderBody()
+    </div>
+</body>
+</html>

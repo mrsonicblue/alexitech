@@ -1,0 +1,27 @@
+﻿@model AuthModels.Index
+@{
+    ViewBag.Title = "Hello";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using (Html.BeginForm())
+{
+    @Html.HiddenFor(o => o.State)
+    <h5 class="warning">
+        Read this before proceeding
+    </h5>
+    <p>
+        This Alexa skill has not been created by Logitech and does not use their official Harmony API for interfacing with your Harmony Hub.
+    </p>
+    <p>
+        In order for your Harmony Hub to be accessible by Alexa, you will need to configure your router to allow internet traffic to reach the hub.
+        The setup process will help you to configure your router.
+    </p>
+    <p>
+        Your Harmony Hub is protected by a username and password. When prompted for those credentials as part of this configuration process, the
+        values will be sent this application. If you are not comfortable with providing your credentials, close this window now.
+    </p>
+    <div>
+        <button class="button-primary">Proceed</button>
+    </div>
+}

@@ -1,0 +1,33 @@
+﻿@model AuthModels.Login
+@{
+    ViewBag.Title = "Login";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using (Html.BeginForm("Login", null))
+{
+    @Html.HiddenFor(o => o.State)
+    @Html.HiddenFor(o => o.Hostname)
+    <p>
+        Enter the credentials for your Logitech Harmony account.
+    </p>
+    <p>
+        <div class="row">
+            <div class="six columns">
+                <label for="Username">Username</label>
+                @Html.TextBoxFor(o => o.Username, new { type = "email", @class = "u-full-width" })
+                @Html.ValidationMessageFor(o => o.Username)
+            </div>
+        </div>
+        <div class="row">
+            <div class="six columns">
+                <label for="Password">Password</label>
+                @Html.PasswordFor(o => o.Password, new { @class = "u-full-width" })
+                @Html.ValidationMessageFor(o => o.Password)
+            </div>
+        </div>
+    </p>
+    <div>
+        <button class="button-primary">Login</button>
+    </div>
+}

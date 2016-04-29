@@ -1,0 +1,33 @@
+﻿@model AuthModels.Network
+@{
+    ViewBag.Title = "Network Setup";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using (Html.BeginForm("Network", null))
+{
+    @Html.HiddenFor(o => o.State)
+    <p>
+        In order to communicate with your Harmony Hub, your router will need to be configured to allow internet
+        traffic to reach it. This is called port forwarding. The port number which needs to be forwarded to your 
+        Harmony Hub is <strong>5222</strong>.
+        You can find information about port forwarding on the website <a href="http://portforward.com/" target="_blank">portforward.com</a>
+    </p>
+    <p>
+        Please provide the IP address of your home internet connection. The address which has been pre-populated is
+        the internet address of the device you are currently using. If you are on the same network as your Harmony Hub
+        and are using Wi-Fi, then this address is likely correct.
+    </p>
+    <p>
+        <div class="row">
+            <div class="six columns">
+                <label for="Username">IP Address</label>
+                @Html.TextBoxFor(o => o.Hostname, new { @class = "u-full-width" })
+                @Html.ValidationMessageFor(o => o.Hostname)
+            </div>
+        </div>
+    </p>
+    <div>
+        <button class="button-primary">Test My Network</button>
+    </div>
+}

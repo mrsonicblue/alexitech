@@ -1,0 +1,46 @@
+{
+  "intents": [
+    {
+      "intent": "PlayIntent"
+    },
+    {
+      "intent": "PauseIntent"
+    },
+    {
+      "intent": "ButtonIntent",
+      "slots": [
+        {
+          "name": "Button",
+          "type": "BUTTON"
+        }
+      ]
+    },
+    {
+      "intent": "SequenceStartIntent"
+    },
+    {
+      "intent": "SequenceEndIntent"
+    },
+    {
+      "intent": "ActivityIntent",
+      "slots": [
+        {
+          "name": "Activity",
+          "type": "ACTIVITY"
+        }
+      ]
+    },
+    {
+      "intent": "OffIntent"
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    }
+  ]
+}

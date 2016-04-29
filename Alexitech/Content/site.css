@@ -1,0 +1,14 @@
+html, body 
+{
+    margin-top:0.5rem;
+}
+.warning
+{
+    color: #33c3f0;
+    font-weight: bold;
+}
+.field-validation-error
+{
+    color: #33c3f0;
+    font-weight: bold;
+}
