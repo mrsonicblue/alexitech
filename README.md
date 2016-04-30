@@ -41,7 +41,7 @@ If you want to deploy this application, you will need the following:
 Getting Started
 ---------------
 
-When you issued voice commands to Alexa, the voice data is streamed to a Amazon server. Commands mapped to a custom skill are handled via a web service. The service calls are issued from the cloud server, so the application must be accessible from the internet.
+When you issue voice commands to Alexa, the voice data is streamed to a Amazon server. Commands mapped to a custom skill are handled via a web service. The service calls are issued from the cloud server, so the application must be accessible from the internet.
 
 Using your Amazon developer account, you must create an Alexa Skills Kit application. Any Alexa device tied to the Amazon account will have access to the skill. The configuration settings necessary are listed below in the "Alexa Skill Configuration" section.
 
@@ -103,4 +103,4 @@ These values are only necessary if you are planning to submit the skill for cert
 Credit Where Credit is Due
 --------------------------
 
-Both [hdurdle] and [jterrace] have done amazing work on their respective Harmony projects to make this application possible. 
+Both @hdurdle and @jterrace have done amazing work on their respective Harmony projects to make this application possible. 
