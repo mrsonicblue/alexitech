@@ -6,15 +6,9 @@ ButtonIntent press {Button}
 ButtonIntent press the {Button}
 ButtonIntent press {Button} button
 ButtonIntent press the {Button} button
-SequenceStartIntent start a button sequence
-SequenceStartIntent start a sequence
-SequenceStartIntent listen
-SequenceStartIntent start listening
-SequenceEndIntent end sequence
-SequenceEndIntent end button sequence
-SequenceEndIntent stop sequence
-SequenceEndIntent stop button sequence
-SequenceEndIntent stop listening
+ListenStartIntent listen
+ListenStartIntent start listening
+ListenEndIntent stop listening
 ActivityIntent start {Activity}
 ActivityIntent start {Activity} activity
 ActivityIntent start the {Activity}
@@ -23,6 +17,10 @@ ActivityIntent switch to {Activity}
 ActivityIntent switch to {Activity} activity
 ActivityIntent switch to the {Activity}
 ActivityIntent switch to the {Activity} activity
+SequenceIntent run {Sequence} sequence
+SequenceIntent run {Sequence}
+SequenceIntent run the {Sequence}
+SequenceIntent run the {Sequence} sequence
 OffIntent power off
 OffIntent power down
 OffIntent turn off

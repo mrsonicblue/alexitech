@@ -33,3 +33,6 @@ mute
 back
 volume up
 volume down
+
+SEQUENCE
+--------

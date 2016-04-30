@@ -12,7 +12,7 @@ namespace HarmonyHub
     {
         public List<Activity> activity { get; set; }
         public List<Device> device { get; set; }
-        public List<object> sequence { get; set; }
+        public List<Sequence> sequence { get; set; }
         public Content content { get; set; }
         public Global global { get; set; }
 
@@ -37,7 +37,7 @@ namespace HarmonyHub
         public string id { get; set; }
         public string activityTypeDisplayName { get; set; }
         public List<ControlGroup> controlGroup { get; set; }
-        public List<object> sequences { get; set; }
+        public List<string> sequences { get; set; }
         public int activityOrder { get; set; }
         public bool isTuningDefault { get; set; }
         public Dictionary<string, FixItCommand> fixit { get; set; }
@@ -94,6 +94,12 @@ namespace HarmonyHub
         public string locale { get; set; }
     }
 
+    public class Sequence
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+    }
+
     /// <summary>
     /// Power and Input states to "fix" a device
     /// </summary>
@@ -118,7 +124,7 @@ namespace HarmonyHub
     /// <summary>
     /// HarmonyHub Remote Action
     /// </summary>
-    public class HarmonyAction
+    public class HarmonyIRCommandAction
     {
         /// <summary>
         /// Action Type (IRCommand)
@@ -134,6 +140,14 @@ namespace HarmonyHub
         /// HarmonyHub command to send to device
         /// </summary>
         public string command { get; set; }
+    }
+
+    /// <summary>
+    /// HarmonyHub Remote Action
+    /// </summary>
+    public class HarmonySequenceAction
+    {
+        public int sequenceId { get; set; }
     }
 
     public class ControlGroup

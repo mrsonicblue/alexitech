@@ -16,10 +16,10 @@
       ]
     },
     {
-      "intent": "SequenceStartIntent"
+      "intent": "ListenStartIntent"
     },
     {
-      "intent": "SequenceEndIntent"
+      "intent": "ListenEndIntent"
     },
     {
       "intent": "ActivityIntent",
@@ -27,6 +27,15 @@
         {
           "name": "Activity",
           "type": "ACTIVITY"
+        }
+      ]
+    },
+    {
+      "intent": "SequenceIntent",
+      "slots": [
+        {
+          "name": "Sequence",
+          "type": "SEQUENCE"
         }
       ]
     },

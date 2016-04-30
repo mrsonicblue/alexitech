@@ -144,6 +144,28 @@ namespace HarmonyHub
         }
 
         /// <summary>
+        /// Send message to HarmonyHub to request to run a sequence
+        /// Result is parsed by OnIq based on ClientCommandType
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <param name="command"></param>
+        public void Sequence(int sequenceId)
+        {
+            EnsureConnection();
+
+            _clientCommand = ClientCommandType.PressButton;
+
+            var iqToSend = new IQ { Type = IqType.get, Namespace = "", From = "1", To = "guest" };
+            iqToSend.AddChild(HarmonyDocuments.SequenceDocument(sequenceId));
+            iqToSend.GenerateId();
+
+            var iqGrabber = new IqGrabber(Xmpp);
+            iqGrabber.SendIq(iqToSend, 5);
+
+            //WaitForData(5);
+        }
+
+        /// <summary>
         /// Send message to HarmonyHub to request to turn off all devices
         /// </summary>
         public void TurnOff()

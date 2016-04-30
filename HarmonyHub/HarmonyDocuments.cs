@@ -46,11 +46,35 @@ namespace HarmonyHub
             element.Attributes.Add("xmlns", "connect.logitech.com");
             element.Attributes.Add("mime", "vnd.logitech.harmony/vnd.logitech.harmony.engine?holdAction");
 
-            var action = new HarmonyAction { type = "IRCommand", deviceId = deviceId, command = command };
+            var action = new HarmonyIRCommandAction { type = "IRCommand", deviceId = deviceId, command = command };
             var json = new JavaScriptSerializer().Serialize(action);
 
             // At this point our valid json won't work - we need to break it so it looks like:
             // {"type"::"IRCommand","deviceId"::"deviceId","command"::"command"}
+            // note double colons 
+
+            json = json.Replace(":", "::");
+
+            element.Value = string.Format("action={0}:status=press", json);
+
+            document.AddChild(element);
+
+            return document;
+        }
+
+        public static HarmonyDocument SequenceDocument(int sequenceId)
+        {
+            var document = new HarmonyDocument();
+
+            var element = new Element("oa");
+            element.Attributes.Add("xmlns", "connect.logitech.com");
+            element.Attributes.Add("mime", "vnd.logitech.harmony/vnd.logitech.harmony.engine?holdAction");
+
+            var action = new HarmonySequenceAction { sequenceId = sequenceId };
+            var json = new JavaScriptSerializer().Serialize(action);
+
+            // At this point our valid json won't work - we need to break it so it looks like:
+            // {"sequenceId"::123}
             // note double colons 
 
             json = json.Replace(":", "::");

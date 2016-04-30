@@ -26,7 +26,7 @@ namespace Alexitech.Controllers
 
             bool success = false;
             string speech = null;
-            bool inSequence = false;
+            bool inListen = false;
             string intentName = null;
             int? userID = null;
 
@@ -40,8 +40,8 @@ namespace Alexitech.Controllers
                     if (session.Attributes != null)
                     {
                         string v;
-                        if (session.Attributes.TryGetValue("inSequence", out v) && v == "true")
-                            inSequence = true;
+                        if (session.Attributes.TryGetValue("inListen", out v) && v == "true")
+                            inListen = true;
                     }
 
                     if (session.User != null && session.User.AccessToken != null)
@@ -82,14 +82,17 @@ namespace Alexitech.Controllers
                                         speech = "Here are some sample phrases. Tell the remote to start the TV activity. Or. Tell the remote to pause. Or. Tell the remote to press the mute button.";
                                         break;
 
-                                    case "SequenceStartIntent":
-                                        inSequence = true;
+                                    case "ListenStartIntent":
+                                        inListen = true;
                                         success = true;
                                         speech = "OK, I'm listening";
                                         break;
 
-                                    case "SequenceEndIntent":
-                                        inSequence = false;
+                                    case "ListenEndIntent":
+                                    case "AMAZON.StopIntent":
+                                    case "AMAZON.CancelIntent":
+                                    case "AMAZON.NoIntent":
+                                        inListen = false;
                                         success = true;
                                         speech = "OK, done listening";
                                         break;
@@ -148,22 +151,61 @@ namespace Alexitech.Controllers
                 version = "1.0",
                 sessionAttributes = new
                 {
-                    inSequence = (inSequence ? "true" : "false")
+                    inListen = (inListen ? "true" : "false")
                 },
                 response = new
                 {
                     outputSpeech = new
                     {
                         type = "PlainText",
-                        text = inSequence 
+                        text = inListen 
                             ? (success ? "Yep" : "Hmm")
                             : (speech ?? "OK")
                     },
-                    shouldEndSession = !inSequence
+                    shouldEndSession = !inListen
                 }
             };
 
             return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult Test(string name)
+        {
+            using (Manager m = new Manager())
+            {
+                var user = m.Users.FirstOrDefault();
+
+                var values = new Dictionary<string, string>();
+                values["Sequence"] = "hamburger";
+
+                string speech;
+                Command(user, "SequenceIntent", values, out speech);
+
+                return Content(speech);
+
+                //var client = GetHarmonyClient(user);
+
+                //var config = new JavaScriptSerializer().Deserialize<HarmonyConfigResult>(client.Config);
+
+                //var sequence = config.sequence
+                //    .OrderBy(o =>
+                //    {
+                //        var label = (o.name ?? "")
+                //            .ToLower();
+
+                //        return Distance(name, label);
+                //    })
+                //    .FirstOrDefault();
+
+                //if (sequence != null)
+                //{
+                //    int id;
+                //    if (int.TryParse(sequence.id, out id))
+                //    {
+                //        client.Sequence(id);
+                //    }
+                //}
+            }
         }
 
         private string LoginToLogitech(string userAuthToken, string ipAddress, int harmonyPort)
@@ -179,6 +221,19 @@ namespace Alexitech.Controllers
             return sessionToken;
         }
 
+        private HarmonyClient GetHarmonyClient(User user)
+        {
+            return ScopingModule.Application.Ensure<HarmonyClient>(user.ID.ToString(), () =>
+            {
+                string sessionToken = LoginToLogitech(user.HarmonyToken, user.Hostname, 5222);
+                var r = new HarmonyClient(user.Hostname, 5222, sessionToken);
+
+                r.GetConfig();
+
+                return r;
+            });
+        }
+
         private bool Command(User user, string name, Dictionary<string, string> values, out string speech)
         {
             bool success = false;
@@ -186,15 +241,7 @@ namespace Alexitech.Controllers
 
             lock (_lock)
             {
-                var client = ScopingModule.Application.Ensure<HarmonyClient>(user.ID.ToString(), () =>
-                {
-                    string sessionToken = LoginToLogitech(user.HarmonyToken, user.Hostname, 5222);
-                    var r = new HarmonyClient(user.Hostname, 5222, sessionToken);
-
-                    r.GetConfig();
-
-                    return r;
-                });
+                var client = GetHarmonyClient(user);
 
                 var config = new JavaScriptSerializer().Deserialize<HarmonyConfigResult>(client.Config);
                 string s;
@@ -251,7 +298,7 @@ namespace Alexitech.Controllers
 
                                         if (button != null)
                                         {
-                                            var action = new JavaScriptSerializer().Deserialize<HarmonyAction>(button.action);
+                                            var action = new JavaScriptSerializer().Deserialize<HarmonyIRCommandAction>(button.action);
                                             if (action != null)
                                             {
                                                 client.PressButton(action.deviceId, action.command);
@@ -281,6 +328,30 @@ namespace Alexitech.Controllers
                                     client.StartActivity(activity.id);
                                     speech = "Starting the " + activity.label + " activity";
                                     success = true;
+                                }
+                            }
+                        }
+                        break;
+
+                    case "SequenceIntent":
+                        {
+                            string sequenceName = (values.TryGetValue("Sequence", out s) ? s : "").ToLower();
+
+                            if (config != null && config.sequence != null)
+                            {
+                                var sequence = config.sequence
+                                    .OrderBy(o => Distance(sequenceName, (o.name ?? "").ToLower()))
+                                    .FirstOrDefault();
+
+                                if (sequence != null)
+                                {
+                                    int sequenceId;
+                                    if (int.TryParse(sequence.id, out sequenceId))
+                                    {
+                                        client.Sequence(sequenceId);
+                                        speech = "Running the " + sequence.name + " sequence";
+                                        success = true;
+                                    }
                                 }
                             }
                         }
