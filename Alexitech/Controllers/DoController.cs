@@ -175,6 +175,20 @@ namespace Alexitech.Controllers
             {
                 var user = m.Users.FirstOrDefault();
 
+                //var auth = new HarmonyAuthenticationClient(user.Hostname, 5222);
+
+                //string sessionToken = auth.SwapAuthToken(user.HarmonyToken);
+                //if (string.IsNullOrEmpty(sessionToken))
+                //{
+                //    throw new Exception("Could not swap token on Harmony Hub.");
+                //}
+
+                //var r = new HarmonyClient(user.Hostname, 5222, sessionToken);
+
+                //r.GetConfig();
+
+                //return Content("WEE");
+
                 var values = new Dictionary<string, string>();
                 values["Sequence"] = "hamburger";
 
@@ -208,24 +222,18 @@ namespace Alexitech.Controllers
             }
         }
 
-        private string LoginToLogitech(string userAuthToken, string ipAddress, int harmonyPort)
-        {
-            var authentication = new HarmonyAuthenticationClient(ipAddress, harmonyPort);
-
-            string sessionToken = authentication.SwapAuthToken(userAuthToken);
-            if (string.IsNullOrEmpty(sessionToken))
-            {
-                throw new Exception("Could not swap token on Harmony Hub.");
-            }
-
-            return sessionToken;
-        }
-
         private HarmonyClient GetHarmonyClient(User user)
         {
             return ScopingModule.Application.Ensure<HarmonyClient>(user.ID.ToString(), () =>
             {
-                string sessionToken = LoginToLogitech(user.HarmonyToken, user.Hostname, 5222);
+                var auth = new HarmonyAuthenticationClient(user.Hostname, 5222);
+
+                string sessionToken = auth.SwapAuthToken(user.HarmonyToken);
+                if (string.IsNullOrEmpty(sessionToken))
+                {
+                    throw new Exception("Could not swap token on Harmony Hub.");
+                }
+
                 var r = new HarmonyClient(user.Hostname, 5222, sessionToken);
 
                 r.GetConfig();
@@ -242,8 +250,7 @@ namespace Alexitech.Controllers
             lock (_lock)
             {
                 var client = GetHarmonyClient(user);
-
-                var config = new JavaScriptSerializer().Deserialize<HarmonyConfigResult>(client.Config);
+                var config = client.Config;
                 string s;
 
                 // Shortcuts

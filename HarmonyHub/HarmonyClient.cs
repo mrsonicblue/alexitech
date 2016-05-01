@@ -2,6 +2,7 @@
 using agsXMPP.protocol.client;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Web.Script.Serialization;
 
 namespace HarmonyHub
 {
@@ -10,24 +11,17 @@ namespace HarmonyHub
     /// </summary>
     public class HarmonyClient
     {
-        protected bool Wait;
+        private static Regex IdentityRegex = new Regex("\">(.*)</oa>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        protected ManualResetEvent Wait = new ManualResetEvent(false);
 
         protected HarmonyClientConnection Xmpp;
 
-        enum ClientCommandType
-        {
-            GetCurrentActivity = 0,
-            StartActivity = 1,
-            PressButton = 2,
-            GetConfig = 3
-        }
-
-        private ClientCommandType _clientCommand;
         private string _username;
         private string _token;
 
-        public string Config { get; set; }
-        public string SessionToken { get; set; }
+        public string RawConfig { get; set; }
+        public HarmonyConfigResult Config { get; set; }
         public string CurrentActivity { get; set; }
 
         /// <summary>
@@ -39,13 +33,10 @@ namespace HarmonyHub
         public HarmonyClient(string ipAddress, int port, string token)
         {
             Xmpp = new HarmonyClientConnection(ipAddress, port);
-            Xmpp.OnLogin += delegate { Wait = false; };
+            Xmpp.OnLogin += delegate { Wait.Set(); };
 
-            SessionToken = token;
             _username = string.Format("{0}@x.com", token);
             _token = token;
-
-            Xmpp.OnIq += OnIq;
         }
 
         protected void EnsureConnection()
@@ -54,7 +45,11 @@ namespace HarmonyHub
             {
                 Xmpp.Open(_username, _token);
 
-                WaitForData(5);
+                try
+                {
+                    Wait.WaitOne(5000);
+                }
+                finally { Wait.Reset(); }
             }
         }
 
@@ -68,16 +63,27 @@ namespace HarmonyHub
         {
             EnsureConnection();
 
-            _clientCommand = ClientCommandType.GetConfig;
-
             var iqToSend = new IQ { Type = IqType.get, Namespace = "", From = "1", To = "guest" };
             iqToSend.AddChild(HarmonyDocuments.ConfigDocument());
             iqToSend.GenerateId();
 
             var iqGrabber = new IqGrabber(Xmpp);
-            iqGrabber.SendIq(iqToSend, 10);
+            var iq = iqGrabber.SendIq(iqToSend, 10000);
 
-            WaitForData(5);
+            if (iq != null)
+            {
+                var match = IdentityRegex.Match(iq.InnerXml);
+                if (match.Success)
+                {
+                    RawConfig = match.Groups[1].ToString();
+                    Config = null;
+                    try
+                    {
+                        Config = new JavaScriptSerializer().Deserialize<HarmonyConfigResult>(RawConfig);
+                    }
+                    catch { }
+                }
+            }
         }
 
         /// <summary>
@@ -89,16 +95,11 @@ namespace HarmonyHub
         {
             EnsureConnection();
 
-            _clientCommand = ClientCommandType.StartActivity;
-
             var iqToSend = new IQ { Type = IqType.get, Namespace = "", From = "1", To = "guest" };
             iqToSend.AddChild(HarmonyDocuments.StartActivityDocument(activityId));
             iqToSend.GenerateId();
 
-            var iqGrabber = new IqGrabber(Xmpp);
-            iqGrabber.SendIq(iqToSend, 10);
-
-            WaitForData(5);
+            Xmpp.Send(iqToSend);
         }
 
         /// <summary>
@@ -109,16 +110,21 @@ namespace HarmonyHub
         {
             EnsureConnection();
 
-            _clientCommand = ClientCommandType.GetCurrentActivity;
-
             var iqToSend = new IQ { Type = IqType.get, Namespace = "", From = "1", To = "guest" };
             iqToSend.AddChild(HarmonyDocuments.GetCurrentActivityDocument());
             iqToSend.GenerateId();
 
             var iqGrabber = new IqGrabber(Xmpp);
-            iqGrabber.SendIq(iqToSend, 10);
+            var iq = iqGrabber.SendIq(iqToSend, 10);
 
-            WaitForData(5);
+            if (iq != null)
+            {
+                var match = IdentityRegex.Match(iq.InnerXml);
+                if (match.Success)
+                {
+                    CurrentActivity = match.Groups[1].ToString().Split('=')[1];
+                }
+            }
         }
 
         /// <summary>
@@ -131,16 +137,11 @@ namespace HarmonyHub
         {
             EnsureConnection();
 
-            _clientCommand = ClientCommandType.PressButton;
-
             var iqToSend = new IQ { Type = IqType.get, Namespace = "", From = "1", To = "guest" };
             iqToSend.AddChild(HarmonyDocuments.IRCommandDocument(deviceId, command));
             iqToSend.GenerateId();
 
-            var iqGrabber = new IqGrabber(Xmpp);
-            iqGrabber.SendIq(iqToSend, 5);
-
-            //WaitForData(5);
+            Xmpp.Send(iqToSend);
         }
 
         /// <summary>
@@ -153,16 +154,11 @@ namespace HarmonyHub
         {
             EnsureConnection();
 
-            _clientCommand = ClientCommandType.PressButton;
-
             var iqToSend = new IQ { Type = IqType.get, Namespace = "", From = "1", To = "guest" };
             iqToSend.AddChild(HarmonyDocuments.SequenceDocument(sequenceId));
             iqToSend.GenerateId();
 
-            var iqGrabber = new IqGrabber(Xmpp);
-            iqGrabber.SendIq(iqToSend, 5);
-
-            //WaitForData(5);
+            Xmpp.Send(iqToSend);
         }
 
         /// <summary>
@@ -170,84 +166,13 @@ namespace HarmonyHub
         /// </summary>
         public void TurnOff()
         {
-            GetCurrentActivity();
-            if (CurrentActivity != "-1")
-            {
+            //GetCurrentActivity();
+            //if (CurrentActivity != "-1")
+            //{
                 StartActivity("-1");
-            }
+            //}
         }
 
         #endregion
-
-        /// <summary>
-        /// Wait for timeoutSeconds to allow messages to be received from the HarmonyHub
-        /// </summary>
-        /// <param name="timeoutSeconds"></param>
-        protected void WaitForData(int timeoutSeconds)
-        {
-            Wait = true;
-            int i = 0;
-            do
-            {
-                i++;
-                if (i == (timeoutSeconds * 2))
-                    Wait = false;
-                Thread.Sleep(500);
-            } while (Wait);
-        }
-
-        /// <summary>
-        /// Fires on receipt of an Iq message from the HarmonyHub
-        /// Check ClientCommandType to determine what to do
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="iq"></param>
-        void OnIq(object sender, IQ iq)
-        {
-            if (iq.HasTag("oa"))
-            {
-                // Keep receiving messages until we get a 200 status
-                // Activity commands send 100 (continue) until they finish
-                if (iq.InnerXml.Contains("errorcode=\"200\""))
-                {
-                    const string identityRegEx = "\">(.*)</oa>";
-                    var regex = new Regex(identityRegEx, RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-                    switch (_clientCommand)
-                    {
-                        case ClientCommandType.GetConfig:
-                            {
-                                var match = regex.Match(iq.InnerXml);
-                                if (match.Success)
-                                {
-                                    Config = match.Groups[1].ToString();
-                                }
-                            }
-                            break;
-                        case ClientCommandType.GetCurrentActivity:
-                            {
-                                var match = regex.Match(iq.InnerXml);
-                                if (match.Success)
-                                {
-                                    CurrentActivity = match.Groups[1].ToString().Split('=')[1];
-                                }
-                            }
-                            break;
-                        case ClientCommandType.PressButton:
-                            {
-                                var match = regex.Match(iq.InnerXml);
-                                if (match.Success)
-                                {
-                                }
-                            }
-                            break;
-                        case ClientCommandType.StartActivity:
-                            break;
-                    }
-
-                    Wait = false;
-                }
-            }
-        }
     }
 }

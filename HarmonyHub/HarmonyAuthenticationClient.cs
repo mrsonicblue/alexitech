@@ -9,12 +9,11 @@ namespace HarmonyHub
     /// </summary>
     public class HarmonyAuthenticationClient : HarmonyClient
     {
-        private string _sessionToken;
+        private static Regex IdentityRegex = new Regex("identity=([A-Z0-9]{8}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{12}):status", RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         public HarmonyAuthenticationClient(string ipAddress, int port)
             : base(ipAddress, port, "guest")
         {
-            Xmpp.OnIq += OnIq;
         }
 
         /// <summary>
@@ -31,30 +30,18 @@ namespace HarmonyHub
             iqToSend.GenerateId();
 
             var iqGrabber = new IqGrabber(Xmpp);
-            iqGrabber.SendIq(iqToSend, 10);
+            var iq = iqGrabber.SendIq(iqToSend, 5000);
 
-            WaitForData(5);
-
-            return _sessionToken;
-        }
-
-        void OnIq(object sender, IQ iq)
-        {
-            if (iq.HasTag("oa"))
+            if (iq != null)
             {
-                if (iq.InnerXml.Contains("errorcode=\"200\""))
+                var match = IdentityRegex.Match(iq.InnerXml);
+                if (match.Success)
                 {
-                    const string identityRegEx = "identity=([A-Z0-9]{8}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{12}):status";
-                    var regex = new Regex(identityRegEx, RegexOptions.IgnoreCase | RegexOptions.Singleline);
-                    var match = regex.Match(iq.InnerXml);
-                    if (match.Success)
-                    {
-                        _sessionToken = match.Groups[1].ToString();
-                    }
-
-                    Wait = false;
+                    return match.Groups[1].ToString();
                 }
             }
+
+            return null;
         }
     }
 }
