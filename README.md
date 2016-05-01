@@ -21,12 +21,13 @@ Current Features
 - Pressing any button in the current activity
 - Shutting off all devices
 - A "listen" mode which allows repeated commands
+- Running command sequences
 
 Planned Features
 ----------------
 
-- Macro recording and playback
-- Better volume control
+- Allow repeated commands ("press right button five times")
+- Better volume control ("volume up" and "volume down")
 
 Prerequisites
 -------------
