@@ -115,7 +115,7 @@ namespace HarmonyHub
             iqToSend.GenerateId();
 
             var iqGrabber = new IqGrabber(Xmpp);
-            var iq = iqGrabber.SendIq(iqToSend, 10);
+            var iq = iqGrabber.SendIq(iqToSend, 5000);
 
             if (iq != null)
             {

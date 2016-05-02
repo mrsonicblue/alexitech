@@ -16,6 +16,19 @@
       ]
     },
     {
+      "intent": "ButtonOnDeviceIntent",
+      "slots": [
+        {
+          "name": "Button",
+          "type": "BUTTON"
+        },
+        {
+          "name": "Device",
+          "type": "DEVICE"
+        }
+      ]
+    },
+    {
       "intent": "ListenStartIntent"
     },
     {

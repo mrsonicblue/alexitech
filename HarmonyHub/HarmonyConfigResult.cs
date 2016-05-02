@@ -64,7 +64,7 @@ namespace HarmonyHub
         public List<int> Capabilities { get; set; }
         public string type { get; set; }
         public int DongleRFID { get; set; }
-        public List<object> controlGroup { get; set; }
+        public List<ControlGroup> controlGroup { get; set; }
         public int ControlPort { get; set; }
         public bool IsKeyboardAssociated { get; set; }
         public string model { get; set; }

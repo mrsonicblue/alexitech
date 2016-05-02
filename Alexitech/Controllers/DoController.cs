@@ -82,12 +82,14 @@ namespace Alexitech.Controllers
                                         speech = "Here are some sample phrases. Tell the remote to start the TV activity. Or. Tell the remote to pause. Or. Tell the remote to press the mute button.";
                                         break;
 
+                                    case "SequenceStartIntent": // Temporary
                                     case "ListenStartIntent":
                                         inListen = true;
                                         success = true;
                                         speech = "OK, I'm listening";
                                         break;
 
+                                    case "SequenceEndIntent": // Temporary
                                     case "ListenEndIntent":
                                     case "AMAZON.StopIntent":
                                     case "AMAZON.CancelIntent":
@@ -189,11 +191,28 @@ namespace Alexitech.Controllers
 
                 //return Content("WEE");
 
+                //var values = new Dictionary<string, string>();
+                //values["Sequence"] = "hamburger";
+
+                //string speech;
+                //Command(user, "SequenceIntent", values, out speech);
+
+                //return Content(speech);
+
+                //var values = new Dictionary<string, string>();
+                //values["Button"] = "mute";
+
+                //string speech;
+                //Command(user, "ButtonIntent", values, out speech);
+
+                //return Content(speech);
+
                 var values = new Dictionary<string, string>();
-                values["Sequence"] = "hamburger";
+                values["Button"] = "mute";
+                values["Device"] = "sony TV";
 
                 string speech;
-                Command(user, "SequenceIntent", values, out speech);
+                Command(user, "ButtonOnDeviceIntent", values, out speech);
 
                 return Content(speech);
 
@@ -309,9 +328,54 @@ namespace Alexitech.Controllers
                                             if (action != null)
                                             {
                                                 client.PressButton(action.deviceId, action.command);
-                                                speech = speech ?? "Pressing the " + button.label + " button";
+                                                speech = speech ?? "Pressing " + button.label;
                                                 success = true;
                                             }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        break;
+
+                    case "ButtonOnDeviceIntent":
+                        {
+                            string deviceName = (values.TryGetValue("Device", out s) ? s : "").ToLower();
+                            string buttonName = (values.TryGetValue("Button", out s) ? s : "Pause").ToLower();
+
+                            if (config != null && config.device != null)
+                            {
+                                var device = config.device
+                                    .OrderBy(o => Distance(buttonName, (o.label ?? "").ToLower()))
+                                    .FirstOrDefault();
+
+                                if (device != null)
+                                {
+                                    var buttons = device.controlGroup
+                                        .Where(o => o.function != null)
+                                        .SelectMany(o => o.function)
+                                        .Where(o => o.action != null)
+                                        .ToList();
+
+                                    var button = buttons
+                                        .OrderBy(o =>
+                                        {
+                                            var label = (o.label ?? "")
+                                                .ToLower()
+                                                .Replace("direction ", "");
+
+                                            return Distance(buttonName, label);
+                                        })
+                                        .FirstOrDefault();
+
+                                    if (button != null)
+                                    {
+                                        var action = new JavaScriptSerializer().Deserialize<HarmonyIRCommandAction>(button.action);
+                                        if (action != null)
+                                        {
+                                            client.PressButton(action.deviceId, action.command);
+                                            speech = speech ?? "Pressing " + button.label + " on the " + device.label;
+                                            success = true;
                                         }
                                     }
                                 }

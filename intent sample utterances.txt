@@ -6,6 +6,14 @@ ButtonIntent press {Button}
 ButtonIntent press the {Button}
 ButtonIntent press {Button} button
 ButtonIntent press the {Button} button
+ButtonOnDeviceIntent press {Button} on {Device}
+ButtonOnDeviceIntent press {Button} on the {Device}
+ButtonOnDeviceIntent press the {Button} on {Device}
+ButtonOnDeviceIntent press the {Button} on the {Device}
+ButtonOnDeviceIntent press {Button} button on {Device}
+ButtonOnDeviceIntent press {Button} button on the {Device}
+ButtonOnDeviceIntent press the {Button} button on {Device}
+ButtonOnDeviceIntent press the {Button} button on the {Device}
 ListenStartIntent listen
 ListenStartIntent start listening
 ListenEndIntent stop listening
