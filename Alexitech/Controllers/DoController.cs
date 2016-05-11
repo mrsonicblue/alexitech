@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -12,7 +13,7 @@ using System.Web.Script.Serialization;
 
 namespace Alexitech.Controllers
 {
-    public class DoController : Controller
+    public class DoController : ValidatingController
     {
         private static object _lock = new object();
 
@@ -30,108 +31,104 @@ namespace Alexitech.Controllers
             string intentName = null;
             int? userID = null;
 
-            if (root != null)
+            if (root == null || root.Request == null || !IsTimestampValid(root.Request.Timestamp))
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+            User user = null;
+
+            var session = root.Session;
+            if (session != null)
             {
-                User user = null;
-
-                var session = root.Session;
-                if (session != null)
+                if (session.Attributes != null)
                 {
-                    if (session.Attributes != null)
-                    {
-                        string v;
-                        if (session.Attributes.TryGetValue("inListen", out v) && v == "true")
-                            inListen = true;
-                    }
+                    string v;
+                    if (session.Attributes.TryGetValue("inListen", out v) && v == "true")
+                        inListen = true;
+                }
 
-                    if (session.User != null && session.User.AccessToken != null)
+                if (session.User != null && session.User.AccessToken != null)
+                {
+                    using (var manager = new Manager())
                     {
-                        using (var manager = new Manager())
+                        user = manager.Users
+                            .FirstOrDefault(o => o.AlexaToken == session.User.AccessToken);
+
+                        if (user != null && session.User.UserID != null && user.AlexaUserID != session.User.UserID)
                         {
-                            user = manager.Users
-                                .FirstOrDefault(o => o.AlexaToken == session.User.AccessToken);
+                            user.AlexaUserID = session.User.UserID;
 
-                            if (user != null && session.User.UserID != null && user.AlexaUserID != session.User.UserID)
-                            {
-                                user.AlexaUserID = session.User.UserID;
-
-                                manager.SaveChanges();
-                            }
+                            manager.SaveChanges();
                         }
                     }
                 }
+            }
 
-                var request = root.Request;
-                if (request != null)
+            var request = root.Request;
+            if (request != null)
+            {
+                var intent = request.Intent;
+                if (intent != null)
                 {
-                    var intent = request.Intent;
-                    if (intent != null)
+                    if (intent.Name != null)
                     {
-                        if (intent.Name != null)
+                        intentName = intent.Name;
+
+                        if (user != null)
                         {
-                            intentName = intent.Name;
+                            userID = user.ID;
 
-                            if (user != null)
+                            switch (intentName)
                             {
-                                userID = user.ID;
+                                case "AMAZON.HelpIntent":
+                                    success = true;
+                                    speech = "Here are some sample phrases. Tell the remote to start the TV activity. Or. Tell the remote to pause. Or. Tell the remote to press the mute button.";
+                                    break;
 
-                                switch (intentName)
-                                {
-                                    case "AMAZON.HelpIntent":
-                                        success = true;
-                                        speech = "Here are some sample phrases. Tell the remote to start the TV activity. Or. Tell the remote to pause. Or. Tell the remote to press the mute button.";
-                                        break;
+                                case "SequenceStartIntent": // Temporary
+                                case "ListenStartIntent":
+                                    inListen = true;
+                                    success = true;
+                                    speech = "OK, I'm listening";
+                                    break;
 
-                                    case "SequenceStartIntent": // Temporary
-                                    case "ListenStartIntent":
-                                        inListen = true;
-                                        success = true;
-                                        speech = "OK, I'm listening";
-                                        break;
+                                case "SequenceEndIntent": // Temporary
+                                case "ListenEndIntent":
+                                case "AMAZON.StopIntent":
+                                case "AMAZON.CancelIntent":
+                                case "AMAZON.NoIntent":
+                                    inListen = false;
+                                    success = true;
+                                    speech = "OK, done listening";
+                                    break;
 
-                                    case "SequenceEndIntent": // Temporary
-                                    case "ListenEndIntent":
-                                    case "AMAZON.StopIntent":
-                                    case "AMAZON.CancelIntent":
-                                    case "AMAZON.NoIntent":
-                                        inListen = false;
-                                        success = true;
-                                        speech = "OK, done listening";
-                                        break;
+                                default:
+                                    {
+                                        var values = (intent.Slots ?? new Dictionary<string, AlexaSlot>())
+                                            .ToDictionary(o => o.Key, o => o.Value.Value);
 
-                                    default:
-                                        {
-                                            var values = (intent.Slots ?? new Dictionary<string, AlexaSlot>())
-                                                .ToDictionary(o => o.Key, o => o.Value.Value);
-
-                                            success = Command(user, intent.Name, values, out speech);
-                                        }
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                                speech = "You need to link your Harmony account using the Alexa app";
+                                        success = Command(user, intent.Name, values, out speech);
+                                    }
+                                    break;
                             }
                         }
                         else
                         {
-                            speech = "Error. Missing intent name.";
+                            speech = "You need to link your Harmony account using the Alexa app";
                         }
                     }
                     else
                     {
-                        speech = "Error. Missing intent.";
+                        speech = "Error. Missing intent name.";
                     }
                 }
                 else
                 {
-                    speech = "Error. Missing request.";
+                    speech = "Error. Missing intent.";
                 }
             }
             else
             {
-                speech = "Error. Missing root.";
+                speech = "Error. Missing request.";
             }
 
             using (Manager m = new Manager())
@@ -171,6 +168,22 @@ namespace Alexitech.Controllers
             return Json(response, JsonRequestBehavior.AllowGet);
         }
 
+        private bool IsTimestampValid(string timestamp)
+        {
+            if (string.IsNullOrEmpty(timestamp))
+                return false;
+
+            DateTime d;
+            if (!DateTime.TryParse(timestamp, out d))
+                return false;
+
+            var diff = DateTime.Now - d;
+            if (diff.TotalSeconds > 150.0)
+                return false;
+
+            return true;
+        }
+
         public ActionResult Test(string name)
         {
             using (Manager m = new Manager())
@@ -199,22 +212,25 @@ namespace Alexitech.Controllers
 
                 //return Content(speech);
 
-                //var values = new Dictionary<string, string>();
-                //values["Button"] = "mute";
-
-                //string speech;
-                //Command(user, "ButtonIntent", values, out speech);
-
-                //return Content(speech);
-
                 var values = new Dictionary<string, string>();
-                values["Button"] = "mute";
-                values["Device"] = "sony TV";
+                values["Button"] = "volume down";
 
                 string speech;
-                Command(user, "ButtonOnDeviceIntent", values, out speech);
+                Command(user, "ButtonIntent", values, out speech);
+                Command(user, "ButtonIntent", values, out speech);
+                Command(user, "ButtonIntent", values, out speech);
+                Command(user, "ButtonIntent", values, out speech);
 
                 return Content(speech);
+
+                //var values = new Dictionary<string, string>();
+                //values["Button"] = "mute";
+                //values["Device"] = "sony TV";
+
+                //string speech;
+                //Command(user, "ButtonOnDeviceIntent", values, out speech);
+
+                //return Content(speech);
 
                 //var client = GetHarmonyClient(user);
 
