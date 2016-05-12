@@ -19,6 +19,7 @@ namespace Alexitech.Model
         public string IntentName { get; set; }
         public string RequestBody { get; set; }
         public System.DateTime RequestDate { get; set; }
+        public string ResponseBody { get; set; }
     
         public virtual User User { get; set; }
     }

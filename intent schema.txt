@@ -7,6 +7,12 @@
       "intent": "PauseIntent"
     },
     {
+      "intent": "VolumeUpIntent"
+    },
+    {
+      "intent": "VolumeDownIntent"
+    },
+    {
       "intent": "ButtonIntent",
       "slots": [
         {

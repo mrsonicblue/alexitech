@@ -1,38 +1,163 @@
 ACTIVITY
 --------
 TV
+Watch TV
 DVD
-game
-
+Watch DVD
+Watch a DVD
+Movie
+Watch Movie
+Watch a Movie
+Game
+Play a Game
+Play Xbox
+Play Wii
+Play Playstation
 
 BUTTON
 ------
-play
-pause
-stop
-up
-down
-left
-right
-fast forward
-rewind
-skip forward
-skip back
-skip backward
-page up
-page down
-chapter up
-chapter down
-select
-menu
-exit
-guide
-XBox guide
-info
-mute
-back
-volume up
-volume down
+Game A
+Game B
+Game X
+Game Y
+0
+1
+2
+3
+3D
+4
+5
+6
+7
+8
+9
+A
+Advance
+Airplay
+Angle
+Apps
+Audio
+B
+Back
+Backspace
+Blue
+CC
+Channel Down
+Channel Up
+Direction Down
+Direction Left
+Direction Right
+Direction Up
+Disconnect Wii U
+Discover
+Display
+Eject
+Enter
+Esc
+Exit
+Fast Forward
+Football
+Greater 10
+Green
+Guide
+Home
+i-Manual
+Info
+Input
+InputAirplay
+InputAm
+InputAnalog
+InputAudio1
+InputAudio2
+InputAv1
+InputAv2
+InputAv3
+InputAv4
+InputAv5
+InputAv6
+InputDigital
+InputFm
+InputHdmi1
+InputHdmi2
+InputHdmi3
+InputHdmi4
+InputHdmi5
+InputNet
+InputNetRadio
+InputRhapsody
+InputServer
+InputSirius
+InputTuner
+InputUsb
+InputV-Aux
+InputVideo1
+InputVideo2
+Keypad
+Menu
+Mode
+Mute
+Netflix
+Next Preset
+Number Enter
+Option
+Options
+Pandora
+Pause
+PicOff
+Play
+Play/Pause
+Pop Up
+Power Off
+Power On
+Power Toggle
+Prev Channel
+Prev Preset
+Red
+RelatedSearch
+Replay
+Return
+Rewind
+Scan Down
+Scan Up
+SceneBd/Dvd
+SceneNet
+SceneRadio
+SceneTv
+Search
+Select
+SEN
+Setup
+SF-Enhancer
+SF-Movie
+SF-Music
+SF-ProgramDown
+SF-ProgramUp
+SF-PureDirect
+SF-Straight
+SF-SurDecode
+Skip Backward
+Skip Forward
+Sleep
+Social View
+Spotify
+Standby
+Stop
+Subtitle
+Sync Menu
+Theatre
+Time
+Top Menu
+Trackpad
+Tuner Band
+Tuner Memory
+View
+Volume Down
+Volume Up
+X
+Xbox Guide
+Xbox Home
+Y
+Yellow
 
 SEQUENCE
 --------

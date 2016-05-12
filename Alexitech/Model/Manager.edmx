@@ -13,6 +13,7 @@
           <Property Name="UserID" Type="int" />
           <Property Name="IntentName" Type="nvarchar" MaxLength="1000" />
           <Property Name="RequestBody" Type="ntext" Nullable="false" />
+          <Property Name="ResponseBody" Type="ntext" />
           <Property Name="RequestDate" Type="datetime" Nullable="false" />
         </EntityType>
         <EntityType Name="User">
@@ -69,6 +70,7 @@
           <Property Name="RequestBody" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
           <Property Name="RequestDate" Type="DateTime" Nullable="false" Precision="3" />
           <NavigationProperty Name="User" Relationship="Alexitech.Model.FK_RequestLog_User" FromRole="RequestLog" ToRole="User" />
+          <Property Name="ResponseBody" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -104,6 +106,7 @@
           <EntitySetMapping Name="RequestLogs">
             <EntityTypeMapping TypeName="Alexitech.Model.RequestLog">
               <MappingFragment StoreEntitySet="RequestLog">
+                <ScalarProperty Name="ResponseBody" ColumnName="ResponseBody" />
                 <ScalarProperty Name="RequestDate" ColumnName="RequestDate" />
                 <ScalarProperty Name="RequestBody" ColumnName="RequestBody" />
                 <ScalarProperty Name="IntentName" ColumnName="IntentName" />

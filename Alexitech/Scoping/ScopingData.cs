@@ -116,7 +116,7 @@ namespace Alexitech.Scoping
             lock (_lock)
             {
                 T value;
-                if (!TryGet<T>(key, out value))
+                if (!TryGet<T>(key, out value) || value == null)
                 {
                     value = getter();
                     Set<T>(key, value);

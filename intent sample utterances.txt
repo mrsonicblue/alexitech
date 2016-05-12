@@ -2,6 +2,12 @@ PlayIntent play
 PlayIntent to play
 PauseIntent pause
 PauseIntent to pause
+VolumeUpIntent to volume up
+VolumeUpIntent to increase the volume
+VolumeUpIntent to raise the volume
+VolumeDownIntent to volume down
+VolumeDownIntent to decrease the volume
+VolumeDownIntent to lower the volume
 ButtonIntent press {Button}
 ButtonIntent press the {Button}
 ButtonIntent press {Button} button

@@ -17,19 +17,37 @@ namespace Alexitech.Controllers
     {
         private static object _lock = new object();
 
-        public ActionResult Index(AlexaRoot root)
+        protected override void OnActionExecuted(ActionExecutedContext filterContext)
         {
             Stream req = Request.InputStream;
             req.Seek(0, System.IO.SeekOrigin.Begin);
             string requestBody = new StreamReader(req).ReadToEnd();
 
+            using (Manager m = new Manager())
+            {
+                var log = new RequestLog()
+                {
+                    UserID = RouteData.Values["userID"] as int?,
+                    IntentName = RouteData.Values["intentName"] as string,
+                    RequestBody = requestBody,
+                    RequestDate = DateTime.Now
+                };
+                m.RequestLogs.Add(log);
+
+                m.SaveChanges();
+            }
+
+            base.OnActionExecuted(filterContext);
+        }
+
+        public ActionResult Index(AlexaRoot root)
+        {
             //var input = new JavaScriptSerializer().DeserializeObject(json);
 
             bool success = false;
             string speech = null;
             bool inListen = false;
-            string intentName = null;
-            int? userID = null;
+            object card = null;
 
             if (root == null || root.Request == null || !IsTimestampValid(root.Request.Timestamp))
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
@@ -53,96 +71,126 @@ namespace Alexitech.Controllers
                         user = manager.Users
                             .FirstOrDefault(o => o.AlexaToken == session.User.AccessToken);
 
-                        if (user != null && session.User.UserID != null && user.AlexaUserID != session.User.UserID)
+                        if (user != null)
                         {
-                            user.AlexaUserID = session.User.UserID;
+                            RouteData.Values["userID"] = (int?)user.ID;
 
-                            manager.SaveChanges();
+                            if (session.User.UserID != null && user.AlexaUserID != session.User.UserID)
+                            {
+                                user.AlexaUserID = session.User.UserID;
+
+                                manager.SaveChanges();
+                            }
                         }
                     }
                 }
             }
 
-            var request = root.Request;
-            if (request != null)
+            if (user == null)
             {
-                var intent = request.Intent;
-                if (intent != null)
+                var linkResponse = new
                 {
-                    if (intent.Name != null)
+                    version = "1.0",
+                    sessionAttributes = new
                     {
-                        intentName = intent.Name;
-
-                        if (user != null)
+                        inListen = (inListen ? "true" : "false")
+                    },
+                    response = new
+                    {
+                        outputSpeech = new
                         {
-                            userID = user.ID;
+                            type = "PlainText",
+                            text = "You need to link your Harmony account using the Alexa app"
+                        },
+                        card = new
+                        {
+                            type = "LinkAccount"
+                        },
+                        shouldEndSession = true
+                    }
+                };
 
-                            switch (intentName)
+                return Json(linkResponse, JsonRequestBehavior.AllowGet);
+            }
+
+            var requestType = root.Request.Type;
+            if (requestType != null)
+            {
+                switch (requestType)
+                {
+                    case "LaunchRequest":
+                        {
+                            inListen = true;
+                            success = true;
+                            speech = "OK, I'm listening. A command list is available in the Alexa app. Say stop listening when you're done.";
+                            card = new
                             {
-                                case "AMAZON.HelpIntent":
-                                    success = true;
-                                    speech = "Here are some sample phrases. Tell the remote to start the TV activity. Or. Tell the remote to pause. Or. Tell the remote to press the mute button.";
-                                    break;
+                                type = "Standard",
+                                title = "Command List",
+                                text = "Start the [name of] activity\nPress the [name of] button\nPress the [name of] button on the [device name]\nStart listening\nStop listening\nRun the [name of] sequence\nTurn everything off\n"
+                            };
+                        }
+                        break;
 
-                                case "SequenceStartIntent": // Temporary
-                                case "ListenStartIntent":
-                                    inListen = true;
-                                    success = true;
-                                    speech = "OK, I'm listening";
-                                    break;
+                    case "IntentRequest":
+                        {
+                            var intent = root.Request.Intent;
+                            if (intent != null)
+                            {
+                                if (intent.Name != null)
+                                {
+                                    RouteData.Values["intentName"] = intent.Name;
 
-                                case "SequenceEndIntent": // Temporary
-                                case "ListenEndIntent":
-                                case "AMAZON.StopIntent":
-                                case "AMAZON.CancelIntent":
-                                case "AMAZON.NoIntent":
-                                    inListen = false;
-                                    success = true;
-                                    speech = "OK, done listening";
-                                    break;
-
-                                default:
+                                    switch (intent.Name)
                                     {
-                                        var values = (intent.Slots ?? new Dictionary<string, AlexaSlot>())
-                                            .ToDictionary(o => o.Key, o => o.Value.Value);
+                                        case "AMAZON.HelpIntent":
+                                            success = true;
+                                            speech = "Here are some sample phrases. Tell the remote to start the TV activity. Or. Tell the remote to pause. Or. Tell the remote to press the mute button.";
+                                            break;
 
-                                        success = Command(user, intent.Name, values, out speech);
+                                        case "ListenStartIntent":
+                                            inListen = true;
+                                            success = true;
+                                            speech = "OK, I'm listening";
+                                            break;
+
+                                        case "ListenEndIntent":
+                                        case "AMAZON.StopIntent":
+                                        case "AMAZON.CancelIntent":
+                                        case "AMAZON.NoIntent":
+                                            inListen = false;
+                                            success = true;
+                                            speech = "OK, done listening";
+                                            break;
+
+                                        default:
+                                            {
+                                                var values = (intent.Slots ?? new Dictionary<string, AlexaSlot>())
+                                                    .ToDictionary(o => o.Key, o => o.Value.Value);
+
+                                                success = Command(user, intent.Name, values, out speech);
+                                                if (inListen)
+                                                    speech = success ? "OK" : "Hmm";
+                                            }
+                                            break;
                                     }
-                                    break;
+                                }
+                                else
+                                {
+                                    speech = "Error. Missing intent name.";
+                                }
+                            }
+                            else
+                            {
+                                speech = "Error. Missing intent.";
                             }
                         }
-                        else
-                        {
-                            speech = "You need to link your Harmony account using the Alexa app";
-                        }
-                    }
-                    else
-                    {
-                        speech = "Error. Missing intent name.";
-                    }
-                }
-                else
-                {
-                    speech = "Error. Missing intent.";
+                        break;
                 }
             }
             else
             {
-                speech = "Error. Missing request.";
-            }
-
-            using (Manager m = new Manager())
-            {
-                var log = new RequestLog()
-                {
-                    UserID = userID,
-                    IntentName = intentName,
-                    RequestBody = requestBody,
-                    RequestDate = DateTime.Now
-                };
-                m.RequestLogs.Add(log);
-
-                m.SaveChanges();
+                speech = "Error. Missing request type.";
             }
 
             var response = new
@@ -157,10 +205,9 @@ namespace Alexitech.Controllers
                     outputSpeech = new
                     {
                         type = "PlainText",
-                        text = inListen 
-                            ? (success ? "Yep" : "Hmm")
-                            : (speech ?? "OK")
+                        text = speech ?? "OK"
                     },
+                    card = card,
                     shouldEndSession = !inListen
                 }
             };
@@ -280,6 +327,7 @@ namespace Alexitech.Controllers
         private bool Command(User user, string name, Dictionary<string, string> values, out string speech)
         {
             bool success = false;
+            int repeats = 1;
             speech = null;
 
             lock (_lock)
@@ -301,6 +349,20 @@ namespace Alexitech.Controllers
                         name = "ButtonIntent";
                         values["Button"] = "pause";
                         speech = "Pausing";
+                        break;
+
+                    case "VolumeUpIntent":
+                        name = "ButtonIntent";
+                        values["Button"] = "volume up";
+                        speech = "Volume Up";
+                        repeats = 8;
+                        break;
+
+                    case "VolumeDownIntent":
+                        name = "ButtonIntent";
+                        values["Button"] = "volume down";
+                        speech = "Volume Down";
+                        repeats = 8;
                         break;
                 }
 
@@ -328,6 +390,25 @@ namespace Alexitech.Controllers
                                             .Where(o => o.action != null)
                                             .ToList();
 
+                                        //var allbuttons = config.activity
+                                        //    .Where(o => o.controlGroup != null)
+                                        //    .SelectMany(o => o.controlGroup)
+                                        //    .Where(o => o.function != null)
+                                        //    .SelectMany(o => o.function)
+                                        //    .Where(o => o.action != null)
+                                        //    .Select(o => o.label)
+                                        //    .Concat(config.device
+                                        //        .SelectMany(o => o.controlGroup)
+                                        //        .Where(o => o.function != null)
+                                        //        .SelectMany(o => o.function)
+                                        //        .Where(o => o.action != null)
+                                        //        .Select(o => o.label)
+                                        //    )
+                                        //    .Distinct()
+                                        //    .OrderBy(o => o);
+
+                                        //var buttonList = string.Join("\r\n", allbuttons);
+
                                         var button = buttons
                                             .OrderBy(o => {
                                                 var label = (o.label ?? "")
@@ -343,7 +424,11 @@ namespace Alexitech.Controllers
                                             var action = new JavaScriptSerializer().Deserialize<HarmonyIRCommandAction>(button.action);
                                             if (action != null)
                                             {
-                                                client.PressButton(action.deviceId, action.command);
+                                                for (int i = 0; i < repeats; i++)
+                                                {
+                                                    client.PressButton(action.deviceId, action.command);
+                                                }
+
                                                 speech = speech ?? "Pressing " + button.label;
                                                 success = true;
                                             }
